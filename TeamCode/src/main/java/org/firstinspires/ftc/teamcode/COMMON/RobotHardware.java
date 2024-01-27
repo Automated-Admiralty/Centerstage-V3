@@ -42,6 +42,8 @@ public class RobotHardware {
         Claw = hardwareMap.get(Servo.class, "Claw");
         ClawPivotLeft = hardwareMap.get(Servo.class,"ClawPivotLeft");
         ClawPivotRight = hardwareMap.get(Servo.class,"ClawPivotRight");
+        MiniArmLeft = hardwareMap.get(Servo.class,"MiniArmLeft");
+        MiniArmRight = hardwareMap.get(Servo.class,"MiniArmRight");
 
 
     }
