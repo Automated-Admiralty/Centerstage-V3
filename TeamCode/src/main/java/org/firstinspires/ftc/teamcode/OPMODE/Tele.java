@@ -46,7 +46,7 @@ public class Tele extends LinearOpMode {
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP));
         imu.initialize(parameters);
-        PIDCONTROLLERTOOL SlideController = new PIDCONTROLLERTOOL(.0555,0,.001,.02,384.5/360,Robot.LeftSlide);//TODO tune these values in the test file
+        PIDCONTROLLERTOOL SlideController = new PIDCONTROLLERTOOL(.01,0,.002,.01,384.5/360,Robot.LeftSlide);//TODO tune these values in the test file
         waitForStart();
 
         if (isStopRequested()) return;
@@ -54,26 +54,16 @@ public class Tele extends LinearOpMode {
         while (opModeIsActive()) {
             // Store gamepad
             previousGamepad1.copy(currentGamepad1);
-            //Slides
-            if (currentGamepad1.left_bumper && !previousGamepad1.a) {
-                if(SlideStateCounter != 5){
-                    SlideStateCounter += 1;
-                }else if(SlideStateCounter == 5){
-                    SlideStateCounter = SlideStateCounter;
-                }
+            currentGamepad1.copy(gamepad1);
 
-            }
-            if(currentGamepad1.right_bumper && !previousGamepad1.right_bumper){
-                if(SlideStateCounter != 0) {
-                    SlideStateCounter -= 1;
-                }
-            }
+            //Slides
+
             Robot.LeftSlide.setPower(SlideController.calculatePid(SlideTarget));
             Robot.RightSlide.setPower(SlideController.calculatePid(SlideTarget));
 
 
 
-            if (currentGamepad1.left_bumper && !previousGamepad1.a) SlideStateCounter++;
+            if (currentGamepad1.left_bumper && !previousGamepad1.left_bumper) SlideStateCounter++;
 
             if (currentGamepad1.right_bumper && !previousGamepad1.right_bumper) SlideStateCounter = abs(SlideStateCounter - 1);
 
@@ -85,8 +75,13 @@ public class Tele extends LinearOpMode {
 
 
 
-
-
+            if(gamepad1.a){
+                Robot.Intake.setPower(.5);
+            }else if(gamepad1.b){
+                Robot.Intake.setPower(-.5);
+            }else{
+                Robot.Intake.setPower(0);
+            }
 
 
             //Drive
@@ -124,7 +119,9 @@ public class Tele extends LinearOpMode {
             Robot.dtBackRightMotor.setPower(-backRightPower);
 
             //Store gamepad
-            currentGamepad1.copy(gamepad1);
+            telemetry.addData("CurrentSlideState",CurrentSlideState);
+            telemetry.addData("counter", SlideStateCounter);
+            telemetry.update();
 
         }
     }
