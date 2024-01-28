@@ -54,6 +54,7 @@ public class RobotHardware {
         RightSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         LeftSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         RightSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        LeftSlide.setDirection(DcMotorSimple.Direction.REVERSE);
 /*
         Claw = hardwareMap.get(Servo.class, "Claw");
         ClawPivotLeft = hardwareMap.get(Servo.class,"ClawPivotLeft");
