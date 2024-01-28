@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.OPMODE;
 
+import static java.lang.Math.abs;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -9,24 +11,31 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.COMMON.RobotHardware;
 import org.firstinspires.ftc.teamcode.COMMON.TOOLS.PIDCONTROLLERTOOL;
+import java.lang.Math;
 
 @TeleOp
 public class Tele extends LinearOpMode {
+
+    Gamepad currentGamepad1 = new Gamepad();
+    Gamepad previousGamepad1 = new Gamepad();
 
     // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
     public int SlideTarget = 0;
 
     public enum SlideState{
-        Retracted,
-        Extend1,
-        Extend2,
-        Extend3,
-        Extend4,
-        MaxHieght;
+        RETRACTED(0),
+        EXTEND1(300),
+        EXTEND2(600),
+        EXTEND3(900),
+        EXTEND4(1200),
+        MAXEXTEND(1500);
+        private final int ticks;
+        private SlideState(final int ticks) { this.ticks = ticks; }
 
+        // TODO: add the rest for yourself here
     }
     public int SlideStateCounter = 0;
-    SlideState CurrentSlideState = SlideState.Retracted;
+    SlideState CurrentSlideState = SlideState.RETRACTED;
     @Override
     public void runOpMode() throws InterruptedException {
         RobotHardware Robot = new RobotHardware(hardwareMap);
@@ -43,9 +52,10 @@ public class Tele extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-
+            // Store gamepad
+            previousGamepad1.copy(currentGamepad1);
             //Slides
-            if(gamepad1.left_bumper){
+            if (currentGamepad1.left_bumper && !previousGamepad1.a) {
                 if(SlideStateCounter != 5){
                     SlideStateCounter += 1;
                 }else if(SlideStateCounter == 5){
@@ -53,46 +63,27 @@ public class Tele extends LinearOpMode {
                 }
 
             }
-            if(gamepad1.right_bumper){
+            if(currentGamepad1.right_bumper && !previousGamepad1.right_bumper){
                 if(SlideStateCounter != 0) {
                     SlideStateCounter -= 1;
                 }
             }
             Robot.LeftSlide.setPower(SlideController.calculatePid(SlideTarget));
             Robot.RightSlide.setPower(SlideController.calculatePid(SlideTarget));
-            switch (CurrentSlideState){
-                case Retracted:
-                    SlideTarget = 10;
-                    break;
-                case Extend1:
-                    SlideTarget = 300;
-                    break;
-                case Extend2:
-                    SlideTarget = 600;
-                    break;
-                case Extend3:
-                    SlideTarget = 900;
-                    break;
-                case Extend4:
-                    SlideTarget = 1200;
-                    break;
-                case MaxHieght:
-                    SlideTarget = 1500;
-                    break;
-            }
-            if(SlideStateCounter == 0){
-                CurrentSlideState = SlideState.Retracted;
-            }else if(SlideStateCounter == 1){
-                CurrentSlideState = SlideState.Extend1;
-            } else if(SlideStateCounter == 2){
-            CurrentSlideState = SlideState.Extend2;
-            }else if(SlideStateCounter == 3){
-                CurrentSlideState = SlideState.Extend3;
-            }else if(SlideStateCounter == 4){
-                CurrentSlideState = SlideState.Extend4;
-            }else if(SlideStateCounter == 5){
-                CurrentSlideState = SlideState.MaxHieght;
-            }
+
+
+
+            if (currentGamepad1.left_bumper && !previousGamepad1.a) SlideStateCounter++;
+
+            if (currentGamepad1.right_bumper && !previousGamepad1.right_bumper) SlideStateCounter = abs(SlideStateCounter - 1);
+
+            Robot.LeftSlide.setPower(SlideController.calculatePid(SlideTarget));
+            Robot.RightSlide.setPower(SlideController.calculatePid(SlideTarget));
+
+            CurrentSlideState = SlideState.values()[SlideStateCounter % SlideState.values().length];
+            SlideTarget = CurrentSlideState.ticks;
+
+
 
 
 
@@ -121,7 +112,7 @@ public class Tele extends LinearOpMode {
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio,
             // but only if at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+            double denominator = Math.max(abs(rotY) + abs(rotX) + abs(rx), 1);
             double frontLeftPower = (rotY + rotX + rx) / denominator;
             double backLeftPower = (rotY - rotX + rx) / denominator;
             double frontRightPower = (rotY -rotX - rx) / denominator;
@@ -131,6 +122,10 @@ public class Tele extends LinearOpMode {
             Robot.dtBackLeftMotor.setPower(backLeftPower);
             Robot.dtFrontRightMotor.setPower(-frontRightPower);
             Robot.dtBackRightMotor.setPower(-backRightPower);
+
+            //Store gamepad
+            currentGamepad1.copy(gamepad1);
+
         }
     }
 }
