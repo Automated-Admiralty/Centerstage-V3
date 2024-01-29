@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.OPMODE;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
+
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -8,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.State;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.COMMON.RobotHardware;
 import org.firstinspires.ftc.teamcode.COMMON.TOOLS.PIDCONTROLLERTOOL;
@@ -19,7 +22,7 @@ public class Tele extends LinearOpMode {
     Gamepad currentGamepad1 = new Gamepad();
     Gamepad previousGamepad1 = new Gamepad();
 
-    // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
+    //Slide info State and target
     public int SlideTarget = 0;
 
     public enum SlideState{
@@ -32,10 +35,40 @@ public class Tele extends LinearOpMode {
         private final int ticks;
         private SlideState(final int ticks) { this.ticks = ticks; }
 
-        // TODO: add the rest for yourself here
+
     }
     public int SlideStateCounter = 0;
     SlideState CurrentSlideState = SlideState.RETRACTED;
+
+
+
+
+    //Mini Arm State and var
+    public enum MiniArmState{
+        Scoring,
+        Intaking;
+    }
+     MiniArmState miniArmState = MiniArmState.Intaking;
+    public double MiniArmTarget = 0;
+
+
+    //ClawPivot
+    public enum ClawPivotState{
+        RetractedPivot(0),
+        Extend1Pivot(.1),
+        Extend2Pivot(.2),
+        Extend3Pivot(.4),
+        Extend4Pivot(.5),
+        MaxHiehgtPivot(.6);
+        private final double ClawAngle;
+        private ClawPivotState(final double ClawAngle) { this.ClawAngle = ClawAngle; }
+    }
+    ClawPivotState CurrentClawPivot = ClawPivotState.RetractedPivot;
+    //public double ClawPivotTarget = 0;
+
+
+    //Claw Open Close
+    public boolean ClawOpenOrClose = true; //Claw is closed if var is true
     @Override
     public void runOpMode() throws InterruptedException {
         RobotHardware Robot = new RobotHardware(hardwareMap);
@@ -43,10 +76,12 @@ public class Tele extends LinearOpMode {
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP));
         imu.initialize(parameters);
-        PIDCONTROLLERTOOL SlideController = new PIDCONTROLLERTOOL(.01,0,.002,.01,384.5/360,Robot.LeftSlide);//TODO tune these values in the test file
+        PIDCONTROLLERTOOL SlideControllerLeft = new PIDCONTROLLERTOOL(.018,0,.00002,.0005,384.5/360,Robot.LeftSlide);//TODO tune these values in the test file
+        PIDCONTROLLERTOOL SlideControllerRight = new PIDCONTROLLERTOOL(.018,0,.00002,.0005,384.5/360,Robot.RightSlide);//TODO tune these values in the test file
+
         waitForStart();
 
         if (isStopRequested()) return;
@@ -57,30 +92,74 @@ public class Tele extends LinearOpMode {
             currentGamepad1.copy(gamepad1);
 
             //Slides
-
-            Robot.LeftSlide.setPower(SlideController.calculatePid(SlideTarget));
-            Robot.RightSlide.setPower(SlideController.calculatePid(SlideTarget));
-
-
-
+            //SetPowers
+            Robot.LeftSlide.setPower(SlideControllerLeft.calculatePid(SlideTarget));
+            Robot.RightSlide.setPower(SlideControllerRight.calculatePid(SlideTarget));
+            //Increment counter
             if (currentGamepad1.left_bumper && !previousGamepad1.left_bumper) SlideStateCounter++;
 
-            if (currentGamepad1.right_bumper && !previousGamepad1.right_bumper) SlideStateCounter = abs(SlideStateCounter - 1);
+            if (currentGamepad1.right_bumper && !previousGamepad1.right_bumper) SlideStateCounter = 0;
+            //Swtich Bettwen States
+            if(gamepad1.right_stick_button) {
+                CurrentSlideState = SlideState.values()[SlideStateCounter % SlideState.values().length];
+                SlideTarget = CurrentSlideState.ticks;
+            }
 
-            Robot.LeftSlide.setPower(SlideController.calculatePid(SlideTarget));
-            Robot.RightSlide.setPower(SlideController.calculatePid(SlideTarget));
+            //Mini Arm
+            switch (miniArmState){
+                case Intaking:
+                    MiniArmTarget = 0;
+                case Scoring:
+                    MiniArmTarget = -.75;
+            }
 
-            CurrentSlideState = SlideState.values()[SlideStateCounter % SlideState.values().length];
-            SlideTarget = CurrentSlideState.ticks;
+            //Mini Arm Set Position
+            Robot.MiniArmLeft.setPosition(MiniArmTarget);
+            Robot.MiniArmRight.setPosition(MiniArmTarget);
+
+            //MiniArmControlStatment
+            if(CurrentSlideState == SlideState.RETRACTED){
+                miniArmState = MiniArmState.Intaking;
+            }else if(currentGamepad1.y && !previousGamepad1.y && miniArmState == MiniArmState.Intaking && CurrentSlideState != SlideState.RETRACTED){
+                miniArmState = MiniArmState.Scoring;
+            } else if (currentGamepad1.y && !previousGamepad1.y && miniArmState == MiniArmState.Scoring) {
+                miniArmState = MiniArmState.Intaking;
+            }
 
 
+            //ClawPivotControl
+            if(miniArmState == MiniArmState.Intaking){
+                CurrentClawPivot = ClawPivotState.RetractedPivot;
+            } else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND1 ) {
+                CurrentClawPivot = ClawPivotState.Extend1Pivot;
+            } else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND2 ) {
+            CurrentClawPivot = ClawPivotState.Extend2Pivot;
+            }else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND3 ) {
+                CurrentClawPivot = ClawPivotState.Extend3Pivot;
+            }else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND4 ) {
+                CurrentClawPivot = ClawPivotState.Extend4Pivot;
+            }else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.MAXEXTEND ) {
+                CurrentClawPivot = ClawPivotState.MaxHiehgtPivot;
+            }
+            //ClawPivotSetPosition
+            Robot.ClawPivotLeft.setPosition(CurrentClawPivot.ClawAngle);
+            Robot.ClawPivotRight.setPosition(CurrentClawPivot.ClawAngle);
 
-            if(gamepad1.a){
+            //Intake Motor
+            if(gamepad1.x){
                 Robot.Intake.setPower(.5);
             }else if(gamepad1.b){
                 Robot.Intake.setPower(-.5);
             }else{
                 Robot.Intake.setPower(0);
+            }
+
+            if(currentGamepad1.a && !previousGamepad1.a && ClawOpenOrClose == false){
+                Robot.Claw.setPosition(1);
+                ClawOpenOrClose = true;
+            }else if(currentGamepad1.a&& !previousGamepad1.a && ClawOpenOrClose == true){
+                Robot.Claw.setPosition(0);
+                ClawOpenOrClose = false;
             }
 
 
@@ -89,24 +168,20 @@ public class Tele extends LinearOpMode {
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            // This button choice was made so that it is hard to hit on accident,
-            // it can be freely changed based on preference.
-            // The equivalent button is start on Xbox-style controllers.
+
             if (gamepad1.options) {
                 imu.resetYaw();
             }
 
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-            // Rotate the movement direction counter to the bot's rotation
+
             double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
             double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
 
-            rotX = rotX * 1.1;  // Counteract imperfect strafing
+            rotX = rotX * 1.1;
 
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio,
-            // but only if at least one is out of the range [-1, 1]
+
             double denominator = Math.max(abs(rotY) + abs(rotX) + abs(rx), 1);
             double frontLeftPower = (rotY + rotX + rx) / denominator;
             double backLeftPower = (rotY - rotX + rx) / denominator;
@@ -115,12 +190,15 @@ public class Tele extends LinearOpMode {
 
             Robot.dtFrontLeftMotor.setPower(frontLeftPower);
             Robot.dtBackLeftMotor.setPower(backLeftPower);
-            Robot.dtFrontRightMotor.setPower(-frontRightPower);
-            Robot.dtBackRightMotor.setPower(-backRightPower);
+            Robot.dtFrontRightMotor.setPower(frontRightPower);
+            Robot.dtBackRightMotor.setPower(backRightPower);
 
-            //Store gamepad
+            //Telemetry dat on the Robot
             telemetry.addData("CurrentSlideState",CurrentSlideState);
             telemetry.addData("counter", SlideStateCounter);
+            telemetry.addData("current Claw Pivot state", CurrentClawPivot);
+            telemetry.addData("current mini arm state", miniArmState);
+            telemetry.addData("claw State (True = claw is closed)", ClawOpenOrClose);
             telemetry.update();
 
         }

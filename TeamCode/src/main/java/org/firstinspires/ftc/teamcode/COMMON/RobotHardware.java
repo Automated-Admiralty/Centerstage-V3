@@ -41,8 +41,8 @@ public class RobotHardware {
         dtBackRightMotor = hardwareMap.get(DcMotorEx.class, "dtBackRightMotor");
         dtBackLeftMotor = hardwareMap.get(DcMotorEx.class, "dtBackLeftMotor");
 
-        dtFrontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        dtBackLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        dtFrontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        dtBackRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         Intake = hardwareMap.get(DcMotorEx.class, "IntakeMotor");
         Intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -55,7 +55,6 @@ public class RobotHardware {
         LeftSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         RightSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         LeftSlide.setDirection(DcMotorSimple.Direction.REVERSE);
-/*
         Claw = hardwareMap.get(Servo.class, "Claw");
         ClawPivotLeft = hardwareMap.get(Servo.class,"ClawPivotLeft");
         ClawPivotRight = hardwareMap.get(Servo.class,"ClawPivotRight");
@@ -63,7 +62,7 @@ public class RobotHardware {
         MiniArmRight = hardwareMap.get(Servo.class,"MiniArmRight");
 
 
- */
+
        // imu = hardwareMap.get(IMU.class, "imu");
 
     }

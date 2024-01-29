@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 public class PIDTUNNINGCLASS extends OpMode {
     private PIDController controller;
     public static double p = 0, i = 0, d = 0;
+    public static double pL = 0, iL = 0, dL = 0;
     public static double f = 0;
 
     public static int target = 0;
@@ -40,15 +41,21 @@ public class PIDTUNNINGCLASS extends OpMode {
     @Override
     public void loop() {
         controller.setPID(p,i,d);
-        int armPos = LeftSlide.getCurrentPosition();
-        double pid = controller.calculate(armPos,target);
-        double ff = Math.cos(Math.toRadians(target/ticks_per_deg))*f;
-        double power = pid + ff;
+        int armPosR = RightSlide.getCurrentPosition();
+        double pidR = controller.calculate(armPosR,target);
+        double ffR = Math.cos(Math.toRadians(target/ticks_per_deg))*f;
+        double powerRight = pidR + ffR;
+        controller.setPID(pL,iL,dL);
+        int armPosL = LeftSlide.getCurrentPosition();
+        double pidL = controller.calculate(armPosL,target);
+        double ffL = Math.cos(Math.toRadians(target/ticks_per_deg))*f;
+        double powerLeft = pidL + ffL;
 
-        LeftSlide.setPower(power);
-        RightSlide.setPower(power);
+        LeftSlide.setPower(powerLeft);
+        RightSlide.setPower(powerRight);
 
-        telemetry.addData("pos", armPos);
+        telemetry.addData("posL", armPosL);
+        telemetry.addData("posR", armPosR);
         telemetry.addData( "target", target);
         telemetry.update();
     }
