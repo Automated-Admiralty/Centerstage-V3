@@ -45,21 +45,25 @@ public class Tele extends LinearOpMode {
 
     //Mini Arm State and var
     public enum MiniArmState{
-        Scoring,
-        Intaking;
+        Scoring(.75),
+        Intaking(0);
+        private final double miniarmangle;
+        private MiniArmState(final double miniarmangle) { this.miniarmangle = miniarmangle; }
+
+
     }
-     MiniArmState miniArmState = MiniArmState.Intaking;
-    public double MiniArmTarget = 0;
+     MiniArmState CurrentMiniArmState = MiniArmState.Intaking;
+   // public double MiniArmTarget = 0;
 
 
     //ClawPivot
     public enum ClawPivotState{
         RetractedPivot(0),
-        Extend1Pivot(.1),
-        Extend2Pivot(.2),
+        Extend1Pivot(.32),
+        Extend2Pivot(.38),
         Extend3Pivot(.4),
-        Extend4Pivot(.5),
-        MaxHiehgtPivot(.6);
+        Extend4Pivot(.42),
+        MaxHiehgtPivot(.44);
         private final double ClawAngle;
         private ClawPivotState(final double ClawAngle) { this.ClawAngle = ClawAngle; }
     }
@@ -106,39 +110,34 @@ public class Tele extends LinearOpMode {
             }
 
             //Mini Arm
-            switch (miniArmState){
-                case Intaking:
-                    MiniArmTarget = 0;
-                case Scoring:
-                    MiniArmTarget = -.75;
-            }
+
 
             //Mini Arm Set Position
-            Robot.MiniArmLeft.setPosition(MiniArmTarget);
-            Robot.MiniArmRight.setPosition(MiniArmTarget);
+            Robot.MiniArmLeft.setPosition(CurrentMiniArmState.miniarmangle);
+            Robot.MiniArmRight.setPosition(CurrentMiniArmState.miniarmangle);
 
             //MiniArmControlStatment
             if(CurrentSlideState == SlideState.RETRACTED){
-                miniArmState = MiniArmState.Intaking;
-            }else if(currentGamepad1.y && !previousGamepad1.y && miniArmState == MiniArmState.Intaking && CurrentSlideState != SlideState.RETRACTED){
-                miniArmState = MiniArmState.Scoring;
-            } else if (currentGamepad1.y && !previousGamepad1.y && miniArmState == MiniArmState.Scoring) {
-                miniArmState = MiniArmState.Intaking;
+                CurrentMiniArmState = MiniArmState.Intaking;
+            }else if(currentGamepad1.y && !previousGamepad1.y && CurrentMiniArmState == MiniArmState.Intaking && CurrentSlideState != SlideState.RETRACTED){
+                CurrentMiniArmState = MiniArmState.Scoring;
+            } else if (currentGamepad1.y && !previousGamepad1.y && CurrentMiniArmState == MiniArmState.Scoring) {
+                CurrentMiniArmState = MiniArmState.Intaking;
             }
 
 
             //ClawPivotControl
-            if(miniArmState == MiniArmState.Intaking){
+            if(CurrentMiniArmState == MiniArmState.Intaking){
                 CurrentClawPivot = ClawPivotState.RetractedPivot;
-            } else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND1 ) {
+            } else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND1 ) {
                 CurrentClawPivot = ClawPivotState.Extend1Pivot;
-            } else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND2 ) {
+            } else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND2 ) {
             CurrentClawPivot = ClawPivotState.Extend2Pivot;
-            }else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND3 ) {
+            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND3 ) {
                 CurrentClawPivot = ClawPivotState.Extend3Pivot;
-            }else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND4 ) {
+            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND4 ) {
                 CurrentClawPivot = ClawPivotState.Extend4Pivot;
-            }else if (miniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.MAXEXTEND ) {
+            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.MAXEXTEND ) {
                 CurrentClawPivot = ClawPivotState.MaxHiehgtPivot;
             }
             //ClawPivotSetPosition
@@ -197,8 +196,9 @@ public class Tele extends LinearOpMode {
             telemetry.addData("CurrentSlideState",CurrentSlideState);
             telemetry.addData("counter", SlideStateCounter);
             telemetry.addData("current Claw Pivot state", CurrentClawPivot);
-            telemetry.addData("current mini arm state", miniArmState);
+            telemetry.addData("current mini arm state", CurrentMiniArmState);
             telemetry.addData("claw State (True = claw is closed)", ClawOpenOrClose);
+            telemetry.addData("claw State (True = claw is closed)", CurrentMiniArmState.miniarmangle);
             telemetry.update();
 
         }

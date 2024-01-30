@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.OPMODE.Tele;
+
 public class RobotHardware {
 
     public HardwareMap hardwareMap;
@@ -60,7 +62,8 @@ public class RobotHardware {
         ClawPivotRight = hardwareMap.get(Servo.class,"ClawPivotRight");
         MiniArmLeft = hardwareMap.get(Servo.class,"MiniArmLeft");
         MiniArmRight = hardwareMap.get(Servo.class,"MiniArmRight");
-
+        MiniArmRight.setDirection(Servo.Direction.REVERSE);
+        MiniArmLeft.setDirection(Servo.Direction.REVERSE);
 
 
        // imu = hardwareMap.get(IMU.class, "imu");
