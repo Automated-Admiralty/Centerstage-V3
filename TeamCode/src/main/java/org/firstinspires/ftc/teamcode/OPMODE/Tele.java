@@ -26,12 +26,13 @@ public class Tele extends LinearOpMode {
     public int SlideTarget = 0;
 
     public enum SlideState{
-        RETRACTED(0),
+        RETRACTED(10),
         EXTEND1(300),
         EXTEND2(600),
         EXTEND3(900),
         EXTEND4(1200),
-        MAXEXTEND(1500);
+        EXTEND5(1500),
+        MAXEXTEND(1800);
         private final int ticks;
         private SlideState(final int ticks) { this.ticks = ticks; }
 
@@ -45,25 +46,28 @@ public class Tele extends LinearOpMode {
 
     //Mini Arm State and var
     public enum MiniArmState{
-        Scoring(.75),
-        Intaking(0);
+        Scoring(.7),
+        HOVERING(.0),
+        Intaking(.05);
+
         private final double miniarmangle;
         private MiniArmState(final double miniarmangle) { this.miniarmangle = miniarmangle; }
 
 
     }
-     MiniArmState CurrentMiniArmState = MiniArmState.Intaking;
+     MiniArmState CurrentMiniArmState = MiniArmState.HOVERING;
    // public double MiniArmTarget = 0;
 
 
     //ClawPivot
     public enum ClawPivotState{
-        RetractedPivot(0),
-        Extend1Pivot(.32),
-        Extend2Pivot(.38),
-        Extend3Pivot(.4),
-        Extend4Pivot(.42),
-        MaxHiehgtPivot(.44);
+        RetractedPivot(.0),
+        Extend1Pivot(.2),
+        Extend2Pivot(.22),
+        Extend3Pivot(.24),
+        Extend4Pivot(.26),
+        Extend5Pivot(.28),
+        MaxHiehgtPivot(.3);
         private final double ClawAngle;
         private ClawPivotState(final double ClawAngle) { this.ClawAngle = ClawAngle; }
     }
@@ -117,29 +121,31 @@ public class Tele extends LinearOpMode {
             Robot.MiniArmRight.setPosition(CurrentMiniArmState.miniarmangle);
 
             //MiniArmControlStatment
-            if(CurrentSlideState == SlideState.RETRACTED){
-                CurrentMiniArmState = MiniArmState.Intaking;
+            if(currentGamepad1.y && !previousGamepad1.y && CurrentMiniArmState == MiniArmState.Scoring){
+                CurrentMiniArmState = MiniArmState.HOVERING;
             }else if(currentGamepad1.y && !previousGamepad1.y && CurrentMiniArmState == MiniArmState.Intaking && CurrentSlideState != SlideState.RETRACTED){
                 CurrentMiniArmState = MiniArmState.Scoring;
-            } else if (currentGamepad1.y && !previousGamepad1.y && CurrentMiniArmState == MiniArmState.Scoring) {
+            } else if (currentGamepad1.y && !previousGamepad1.y && CurrentMiniArmState == MiniArmState.HOVERING) {
                 CurrentMiniArmState = MiniArmState.Intaking;
             }
 
 
             //ClawPivotControl
-            if(CurrentMiniArmState == MiniArmState.Intaking){
+            if(CurrentMiniArmState == MiniArmState.Intaking || CurrentMiniArmState == MiniArmState.HOVERING){
                 CurrentClawPivot = ClawPivotState.RetractedPivot;
-            } else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND1 ) {
+            } else if (CurrentMiniArmState != MiniArmState.Intaking&& CurrentMiniArmState != MiniArmState.HOVERING && CurrentSlideState == SlideState.EXTEND1 ) {
                 CurrentClawPivot = ClawPivotState.Extend1Pivot;
-            } else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND2 ) {
+            } else if (CurrentMiniArmState != MiniArmState.Intaking&& CurrentMiniArmState != MiniArmState.HOVERING && CurrentSlideState == SlideState.EXTEND2 ) {
             CurrentClawPivot = ClawPivotState.Extend2Pivot;
-            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND3 ) {
+            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentMiniArmState != MiniArmState.HOVERING&& CurrentSlideState == SlideState.EXTEND3 ) {
                 CurrentClawPivot = ClawPivotState.Extend3Pivot;
-            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.EXTEND4 ) {
+            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentMiniArmState != MiniArmState.HOVERING&& CurrentSlideState == SlideState.EXTEND4 ) {
                 CurrentClawPivot = ClawPivotState.Extend4Pivot;
-            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentSlideState == SlideState.MAXEXTEND ) {
+            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentMiniArmState != MiniArmState.HOVERING &&CurrentSlideState == SlideState.MAXEXTEND ) {
                 CurrentClawPivot = ClawPivotState.MaxHiehgtPivot;
-            }
+            }  else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentMiniArmState != MiniArmState.HOVERING && CurrentSlideState == SlideState.EXTEND5 ) {
+            CurrentClawPivot = ClawPivotState.Extend5Pivot;
+        }
             //ClawPivotSetPosition
             Robot.ClawPivotLeft.setPosition(CurrentClawPivot.ClawAngle);
             Robot.ClawPivotRight.setPosition(CurrentClawPivot.ClawAngle);
@@ -164,34 +170,22 @@ public class Tele extends LinearOpMode {
 
             //Drive
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-            double x = gamepad1.left_stick_x;
+            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
             double rx = gamepad1.right_stick_x;
 
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio,
+            // but only if at least one is out of the range [-1, 1]
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double frontLeftPower = (y + x + rx) / denominator;
+            double backLeftPower = (y - x + rx) / denominator;
+            double frontRightPower = (y - x - rx) / denominator;
+            double backRightPower = (y + x - rx) / denominator;
 
-            if (gamepad1.options) {
-                imu.resetYaw();
-            }
-
-            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
-
-            double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-            double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-
-            rotX = rotX * 1.1;
-
-
-            double denominator = Math.max(abs(rotY) + abs(rotX) + abs(rx), 1);
-            double frontLeftPower = (rotY + rotX + rx) / denominator;
-            double backLeftPower = (rotY - rotX + rx) / denominator;
-            double frontRightPower = (rotY -rotX - rx) / denominator;
-            double backRightPower = (rotY + rotX - rx) / denominator;
-
-            Robot.dtFrontLeftMotor.setPower(frontLeftPower);
-            Robot.dtBackLeftMotor.setPower(backLeftPower);
-            Robot.dtFrontRightMotor.setPower(frontRightPower);
-            Robot.dtBackRightMotor.setPower(backRightPower);
-
+            Robot.dtFrontLeftMotor.setPower(-frontLeftPower);
+            Robot.dtBackLeftMotor.setPower(-backLeftPower);
+            Robot.dtFrontRightMotor.setPower(-frontRightPower);
+            Robot.dtBackRightMotor.setPower(-backRightPower);
             //Telemetry dat on the Robot
             telemetry.addData("CurrentSlideState",CurrentSlideState);
             telemetry.addData("counter", SlideStateCounter);

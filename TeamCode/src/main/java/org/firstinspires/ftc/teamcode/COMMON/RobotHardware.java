@@ -7,7 +7,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.OPMODE.Tele;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvWebcam;
 
 public class RobotHardware {
 
@@ -34,10 +37,12 @@ public class RobotHardware {
     public Servo MiniArmRight;
 
     public IMU imu;
-
+    public OpenCvWebcam camera;
 
 
     public RobotHardware(HardwareMap hardwareMap){
+
+
         dtFrontRightMotor = hardwareMap.get(DcMotorEx.class, "dtFrontRightMotor");
         dtFrontLeftMotor = hardwareMap.get(DcMotorEx.class, "dtFrontLeftMotor");
         dtBackRightMotor = hardwareMap.get(DcMotorEx.class, "dtBackRightMotor");

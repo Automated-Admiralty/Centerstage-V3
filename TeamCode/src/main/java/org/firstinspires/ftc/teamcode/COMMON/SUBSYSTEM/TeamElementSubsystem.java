@@ -2,8 +2,11 @@ package org.firstinspires.ftc.teamcode.COMMON.SUBSYSTEM;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.robot.Robot;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.COMMON.RobotHardware;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
@@ -19,9 +22,11 @@ public class TeamElementSubsystem {
     int zone = 1;
 
     public TeamElementSubsystem(HardwareMap hardwareMap){
-        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
+       // camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class," Webcam 1"));
+        WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
+        int camerMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId","id",hardwareMap.appContext.getPackageName());
+        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName,camerMonitorViewId);
         splitAveragePipeline = new SplitAveragePipeline();
-
         camera.setPipeline(splitAveragePipeline);
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
