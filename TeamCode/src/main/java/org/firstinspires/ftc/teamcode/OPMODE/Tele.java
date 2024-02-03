@@ -127,6 +127,8 @@ public class Tele extends LinearOpMode {
                 CurrentMiniArmState = MiniArmState.Scoring;
             } else if (currentGamepad1.y && !previousGamepad1.y && CurrentMiniArmState == MiniArmState.HOVERING) {
                 CurrentMiniArmState = MiniArmState.Intaking;
+            }else if(currentGamepad1.y && !previousGamepad1.y && CurrentMiniArmState == MiniArmState.Intaking && CurrentSlideState == SlideState.RETRACTED){
+                CurrentMiniArmState = MiniArmState.HOVERING;
             }
 
 
@@ -141,11 +143,11 @@ public class Tele extends LinearOpMode {
                 CurrentClawPivot = ClawPivotState.Extend3Pivot;
             }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentMiniArmState != MiniArmState.HOVERING&& CurrentSlideState == SlideState.EXTEND4 ) {
                 CurrentClawPivot = ClawPivotState.Extend4Pivot;
+            }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentMiniArmState != MiniArmState.HOVERING && CurrentSlideState == SlideState.EXTEND5 ) {
+                CurrentClawPivot = ClawPivotState.Extend5Pivot;
             }else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentMiniArmState != MiniArmState.HOVERING &&CurrentSlideState == SlideState.MAXEXTEND ) {
                 CurrentClawPivot = ClawPivotState.MaxHiehgtPivot;
-            }  else if (CurrentMiniArmState != MiniArmState.Intaking && CurrentMiniArmState != MiniArmState.HOVERING && CurrentSlideState == SlideState.EXTEND5 ) {
-            CurrentClawPivot = ClawPivotState.Extend5Pivot;
-        }
+            }
             //ClawPivotSetPosition
             Robot.ClawPivotLeft.setPosition(CurrentClawPivot.ClawAngle);
             Robot.ClawPivotRight.setPosition(CurrentClawPivot.ClawAngle);

@@ -23,17 +23,18 @@ import com.qualcomm.robotcore.robot.Robot;
 @Config
 @Autonomous(name = "AUTOFARBLUE", group = "Autonomous")
 public class AutoFarBlue extends LinearOpMode {
-    public HardwareMap hardwareMap;
-    // RobotHardware Robot = new RobotHardware(hardwareMap);
+    //public HardwareMap hardwareMap;
 
-  public TeamElementSubsystem Cam = new TeamElementSubsystem(hardwareMap);
+
+  public TeamElementSubsystem Cam;
+
     @Override
     public void runOpMode() {
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(11.8, 61.7, Math.toRadians(90)));
 
-
+        TeamElementSubsystem Cam = new TeamElementSubsystem(hardwareMap);
         // vision here that outputs position
-        int visionOutputPosition = 1;
+        int visionOutputPosition = Cam.elementDetection(telemetry);
 
         Action trajectoryAction1;
         Action trajectoryAction2;
@@ -76,7 +77,7 @@ public class AutoFarBlue extends LinearOpMode {
 
 
         while (!isStopRequested() && !opModeIsActive()) {
-            int position = visionOutputPosition;
+            int position = Cam.elementDetection(telemetry);
             telemetry.addData("Position during Init", position);
             telemetry.update();
         }

@@ -44,8 +44,8 @@ public class SplitAveragePipeline extends OpenCvPipeline {
 
         //Defining Zones
         //Rect(top left x, top left y, bottom right x, bottom right y)
-        zone1 = input.submat(new Rect(60, 170, 356, 285));
-        zone2 = input.submat(new Rect(735, 170, 253, 230));
+        zone1 = input.submat(new Rect(60, 250, 356, 285));
+        zone2 = input.submat(new Rect(735, 250, 253, 230));
 
         //Averaging the colors in the zones
         avgColor1 = Core.mean(zone1);

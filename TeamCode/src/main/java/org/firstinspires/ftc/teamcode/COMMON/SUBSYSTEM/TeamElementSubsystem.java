@@ -23,9 +23,8 @@ public class TeamElementSubsystem {
 
     public TeamElementSubsystem(HardwareMap hardwareMap){
        // camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class," Webcam 1"));
-        WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
-        int camerMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId","id",hardwareMap.appContext.getPackageName());
-        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName,camerMonitorViewId);
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         splitAveragePipeline = new SplitAveragePipeline();
         camera.setPipeline(splitAveragePipeline);
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
